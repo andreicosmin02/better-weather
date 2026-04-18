@@ -1,0 +1,25 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "codex@openai.com",
+                "Name": "Codex"
+            }
+        ],
+        "Category": "Utilities",
+        "Description": "Focused weather popup with current conditions, upcoming hours, and next days",
+        "FormFactors": [
+            "horizontal",
+            "vertical"
+        ],
+        "Icon": "weather-clear",
+        "Id": "local.weather.focused",
+        "License": "GPL-3.0-or-later",
+        "Name": "Focused Weather",
+        "Version": "1.0",
+        "Website": "https://github.com/andreicosmin02/better-weather"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-MainScript": "ui/main.qml"
+}

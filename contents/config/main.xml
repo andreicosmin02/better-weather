@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+      http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+  <kcfgfile name=""/>
+
+  <group name="General">
+    <entry name="locationName" type="String">
+      <label>Display name for the weather location.</label>
+      <default>Brasov</default>
+    </entry>
+    <entry name="latitude" type="Double">
+      <label>Latitude used for the weather forecast request.</label>
+      <default>45.64860916137695</default>
+    </entry>
+    <entry name="longitude" type="Double">
+      <label>Longitude used for the weather forecast request.</label>
+      <default>25.606130599975586</default>
+    </entry>
+    <entry name="timezone" type="String">
+      <label>Timezone name used for the weather forecast request.</label>
+      <default>Europe/Bucharest</default>
+    </entry>
+    <entry name="hourlyCount" type="Int">
+      <label>Number of upcoming hours to show in the popup.</label>
+      <default>8</default>
+    </entry>
+    <entry name="refreshMinutes" type="Int">
+      <label>How often the forecast should refresh.</label>
+      <default>30</default>
+    </entry>
+    <entry name="use24Hour" type="Bool">
+      <label>Whether times should be shown in 24 hour format.</label>
+      <default>true</default>
+    </entry>
+    <entry name="fontFamily" type="String">
+      <label>Font family used in the widget. Empty uses the system default.</label>
+      <default></default>
+    </entry>
+    <entry name="fontWeight" type="String">
+      <label>Font weight used in the widget.</label>
+      <default>Light</default>
+    </entry>
+    <entry name="windUnit" type="String">
+      <label>Wind speed unit.</label>
+      <default>kmh</default>
+    </entry>
+    <entry name="pressureUnit" type="String">
+      <label>Pressure unit.</label>
+      <default>hPa</default>
+    </entry>
+    <entry name="distanceUnit" type="String">
+      <label>Distance unit used for visibility.</label>
+      <default>km</default>
+    </entry>
+    <entry name="precipitationUnit" type="String">
+      <label>Precipitation amount unit.</label>
+      <default>mm</default>
+    </entry>
+    <entry name="showFeelsLike" type="Bool">
+      <label>Show the feels like metric.</label>
+      <default>true</default>
+    </entry>
+    <entry name="showHumidity" type="Bool">
+      <label>Show humidity.</label>
+      <default>true</default>
+    </entry>
+    <entry name="showWind" type="Bool">
+      <label>Show wind speed and direction.</label>
+      <default>true</default>
+    </entry>
+    <entry name="showGusts" type="Bool">
+      <label>Show wind gusts.</label>
+      <default>true</default>
+    </entry>
+    <entry name="showPressure" type="Bool">
+      <label>Show pressure.</label>
+      <default>true</default>
+    </entry>
+    <entry name="showVisibility" type="Bool">
+      <label>Show visibility.</label>
+      <default>false</default>
+    </entry>
+    <entry name="showCloudCover" type="Bool">
+      <label>Show cloud cover.</label>
+      <default>false</default>
+    </entry>
+    <entry name="showPrecipitation" type="Bool">
+      <label>Show current precipitation amount.</label>
+      <default>true</default>
+    </entry>
+    <entry name="showSunTimes" type="Bool">
+      <label>Show sunrise and sunset.</label>
+      <default>true</default>
+    </entry>
+    <entry name="showUpdated" type="Bool">
+      <label>Show the last updated time.</label>
+      <default>false</default>
+    </entry>
+  </group>
+</kcfg>

@@ -1,0 +1,9 @@
+{
+  "name": "better-weather",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node --test --experimental-test-coverage --test-coverage-include=contents/ui/weather-logic.js --test-coverage-lines=100 --test-coverage-functions=100 --test-coverage-branches=100 test/weather-logic.test.cjs",
+    "test:unit": "node --test test/weather-logic.test.cjs"
+  }
+}

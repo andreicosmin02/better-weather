@@ -37,15 +37,32 @@ kpackagetool6 --type Plasma/Applet --upgrade .
 
 Then add `Focused Weather` from Plasma's widget picker.
 
+## Tests
+
+Run the shared logic test suite with the strict coverage gate:
+
+```bash
+npm test
+```
+
+This runs the Node-based unit tests for `contents/ui/weather-logic.js` and enforces:
+
+- 100% line coverage
+- 100% branch coverage
+- 100% function coverage
+
 ## Project Layout
 
 ```text
+package.json
 metadata.json
 contents/config/config.qml
 contents/config/main.xml
 contents/ui/configGeneral.qml
 contents/ui/main.qml
+contents/ui/weather-logic.js
 assets/focused-weather.png
+test/weather-logic.test.cjs
 ```
 
 ## Data Source

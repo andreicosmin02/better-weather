@@ -5,6 +5,7 @@ import QtQml 2.15
 import org.kde.kirigami 2.20 as Kirigami
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.plasma.plasmoid 2.0
+import "weather-logic.js" as WeatherLogic
 
 PlasmoidItem {
     id: root
@@ -126,107 +127,39 @@ PlasmoidItem {
     }
 
     function formatNumber(value, decimals) {
-        if (!Number.isFinite(Number(value))) {
-            return "--";
-        }
-
-        if (decimals <= 0) {
-            return String(Math.round(Number(value)));
-        }
-
-        return (Math.round(Number(value) * Math.pow(10, decimals)) / Math.pow(10, decimals)).toFixed(decimals);
+        return WeatherLogic.formatNumber(value, decimals);
     }
 
     function formatTemperature(value) {
-        if (!Number.isFinite(Number(value))) {
-            return "--";
-        }
-        return Math.round(Number(value)) + "\u00B0";
+        return WeatherLogic.formatTemperature(value);
     }
 
     function formatPercent(value) {
-        if (!Number.isFinite(Number(value))) {
-            return "--";
-        }
-        return Math.round(Number(value)) + "%";
+        return WeatherLogic.formatPercent(value);
     }
 
     function formatSpeed(value) {
-        if (!Number.isFinite(Number(value))) {
-            return "--";
-        }
-
-        switch (configuredWindUnit()) {
-        case "ms":
-            return formatNumber(Number(value) / 3.6, 1) + " m/s";
-        case "mph":
-            return formatNumber(Number(value) * 0.621371, 0) + " mph";
-        default:
-            return formatNumber(Number(value), 0) + " km/h";
-        }
+        return WeatherLogic.formatSpeed(value, configuredWindUnit());
     }
 
     function formatPressure(value) {
-        if (!Number.isFinite(Number(value))) {
-            return "--";
-        }
-
-        switch (configuredPressureUnit()) {
-        case "mmHg":
-            return formatNumber(Number(value) * 0.750061683, 0) + " mmHg";
-        case "inHg":
-            return formatNumber(Number(value) * 0.0295299831, 2) + " inHg";
-        default:
-            return formatNumber(Number(value), 0) + " hPa";
-        }
+        return WeatherLogic.formatPressure(value, configuredPressureUnit());
     }
 
     function formatDistance(value) {
-        if (!Number.isFinite(Number(value))) {
-            return "--";
-        }
-
-        const kilometers = Number(value) / 1000;
-
-        if (configuredDistanceUnit() === "mi") {
-            const miles = kilometers * 0.621371;
-            return (miles >= 10 ? formatNumber(miles, 0) : formatNumber(miles, 1)) + " mi";
-        }
-
-        return (kilometers >= 10 ? formatNumber(kilometers, 0) : formatNumber(kilometers, 1)) + " km";
+        return WeatherLogic.formatDistance(value, configuredDistanceUnit());
     }
 
     function formatPrecipitation(value) {
-        if (!Number.isFinite(Number(value))) {
-            return "--";
-        }
-
-        if (configuredPrecipitationUnit() === "in") {
-            return formatNumber(Number(value) * 0.0393701, 2) + " in";
-        }
-
-        return formatNumber(Number(value), 1) + " mm";
+        return WeatherLogic.formatPrecipitation(value, configuredPrecipitationUnit());
     }
 
     function cardinalDirection(degrees) {
-        if (!Number.isFinite(Number(degrees))) {
-            return "";
-        }
-
-        const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
-        const index = Math.round(Number(degrees) / 45) % directions.length;
-        return directions[index];
+        return WeatherLogic.cardinalDirection(degrees);
     }
 
     function formatWind(speed, direction) {
-        const speedText = formatSpeed(speed);
-        const directionText = cardinalDirection(direction);
-
-        if (speedText === "--") {
-            return "--";
-        }
-
-        return directionText.length > 0 ? speedText + " " + directionText : speedText;
+        return WeatherLogic.formatWind(speed, direction, configuredWindUnit());
     }
 
     function formatTime(isoString) {
@@ -254,137 +187,27 @@ PlasmoidItem {
     }
 
     function currentDateKey() {
-        return Qt.formatDate(new Date(), "yyyy-MM-dd");
+        return WeatherLogic.currentDateKey(new Date());
     }
 
     function currentDateTimeKey() {
-        return Qt.formatDateTime(new Date(), "yyyy-MM-dd'T'HH:mm");
+        return WeatherLogic.currentDateTimeKey(new Date());
     }
 
     function resolveCurrentDayIndex(days) {
-        const currentDate = currentDateKey();
-        let dayIndex = 0;
-
-        for (let i = 0; i < days.length; ++i) {
-            if (String(days[i]) >= currentDate) {
-                dayIndex = i;
-                break;
-            }
-        }
-
-        if (days.length > 0 && String(days[days.length - 1]) < currentDate) {
-            dayIndex = days.length - 1;
-        }
-
-        return dayIndex;
+        return WeatherLogic.resolveCurrentDayIndex(days, currentDateKey());
     }
 
     function weatherDescription(code) {
-        switch (Number(code)) {
-        case 0:
-            return i18n("Clear");
-        case 1:
-            return i18n("Mostly clear");
-        case 2:
-            return i18n("Partly cloudy");
-        case 3:
-            return i18n("Overcast");
-        case 45:
-        case 48:
-            return i18n("Fog");
-        case 51:
-        case 53:
-        case 55:
-        case 56:
-        case 57:
-            return i18n("Drizzle");
-        case 61:
-        case 63:
-        case 65:
-        case 66:
-        case 67:
-            return i18n("Rain");
-        case 71:
-        case 73:
-        case 75:
-        case 77:
-            return i18n("Snow");
-        case 80:
-        case 81:
-        case 82:
-            return i18n("Rain showers");
-        case 85:
-        case 86:
-            return i18n("Snow showers");
-        case 95:
-            return i18n("Thunderstorm");
-        case 96:
-        case 99:
-            return i18n("Thunderstorm with hail");
-        default:
-            return i18n("Weather unavailable");
-        }
+        return i18n(WeatherLogic.weatherDescriptionText(code));
     }
 
     function weatherIconName(code, isDay) {
-        switch (Number(code)) {
-        case 0:
-            return isDay ? "weather-clear" : "weather-clear-night";
-        case 1:
-            return isDay ? "weather-few-clouds" : "weather-few-clouds-night";
-        case 2:
-            return isDay ? "weather-clouds" : "weather-clouds-night";
-        case 3:
-            return "weather-overcast";
-        case 45:
-        case 48:
-            return "weather-fog";
-        case 51:
-        case 53:
-        case 55:
-        case 56:
-        case 57:
-            return "weather-showers-scattered";
-        case 61:
-        case 63:
-        case 65:
-        case 66:
-        case 67:
-            return "weather-showers";
-        case 71:
-        case 73:
-        case 75:
-        case 77:
-            return "weather-snow";
-        case 80:
-        case 81:
-        case 82:
-            return "weather-showers";
-        case 85:
-        case 86:
-            return "weather-snow-scattered";
-        case 95:
-        case 96:
-        case 99:
-            return "weather-storm";
-        default:
-            return "weather-none-available";
-        }
+        return WeatherLogic.weatherIconName(code, isDay);
     }
 
     function forecastUrl() {
-        const latitude = configuredLatitude();
-        const longitude = configuredLongitude();
-        const timezone = configuredTimezone();
-
-        return "https://api.open-meteo.com/v1/forecast"
-            + "?latitude=" + encodeURIComponent(latitude)
-            + "&longitude=" + encodeURIComponent(longitude)
-            + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m,wind_gusts_10m,wind_direction_10m,surface_pressure,cloud_cover,visibility,weather_code,is_day"
-            + "&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,wind_speed_10m,wind_direction_10m,weather_code,is_day"
-            + "&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset"
-            + "&forecast_days=6"
-            + "&timezone=" + encodeURIComponent(timezone);
+        return WeatherLogic.forecastUrl(configuredLatitude(), configuredLongitude(), configuredTimezone());
     }
 
     function resetHourlySummary() {
@@ -417,52 +240,45 @@ PlasmoidItem {
     function refreshMetricModel() {
         metricModel.clear();
 
-        function appendMetric(label, value) {
-            metricModel.append({
-                "label": label,
-                "value": value
-            });
-        }
+        const items = WeatherLogic.buildMetricItems({
+            "feelsLikeText": feelsLikeText,
+            "humidityText": humidityText,
+            "windText": windText,
+            "gustsText": gustsText,
+            "pressureText": pressureText,
+            "visibilityText": visibilityText,
+            "cloudCoverText": cloudCoverText,
+            "precipitationAmountText": precipitationAmountText,
+            "sunriseText": sunriseText,
+            "sunsetText": sunsetText,
+            "updatedText": updatedText
+        }, {
+            "showFeelsLike": Plasmoid.configuration.showFeelsLike,
+            "showHumidity": Plasmoid.configuration.showHumidity,
+            "showWind": Plasmoid.configuration.showWind,
+            "showGusts": Plasmoid.configuration.showGusts,
+            "showPressure": Plasmoid.configuration.showPressure,
+            "showVisibility": Plasmoid.configuration.showVisibility,
+            "showCloudCover": Plasmoid.configuration.showCloudCover,
+            "showPrecipitation": Plasmoid.configuration.showPrecipitation,
+            "showSunTimes": Plasmoid.configuration.showSunTimes,
+            "showUpdated": Plasmoid.configuration.showUpdated
+        }, {
+            "feelsLike": i18n("Feels like"),
+            "humidity": i18n("Humidity"),
+            "wind": i18n("Wind"),
+            "gusts": i18n("Gusts"),
+            "pressure": i18n("Pressure"),
+            "visibility": i18n("Visibility"),
+            "cloudCover": i18n("Cloud cover"),
+            "precipitation": i18n("Precipitation"),
+            "sunrise": i18n("Sunrise"),
+            "sunset": i18n("Sunset"),
+            "updated": i18n("Updated")
+        });
 
-        if (Plasmoid.configuration.showFeelsLike) {
-            appendMetric(i18n("Feels like"), feelsLikeText);
-        }
-
-        if (Plasmoid.configuration.showHumidity) {
-            appendMetric(i18n("Humidity"), humidityText);
-        }
-
-        if (Plasmoid.configuration.showWind) {
-            appendMetric(i18n("Wind"), windText);
-        }
-
-        if (Plasmoid.configuration.showGusts) {
-            appendMetric(i18n("Gusts"), gustsText);
-        }
-
-        if (Plasmoid.configuration.showPressure) {
-            appendMetric(i18n("Pressure"), pressureText);
-        }
-
-        if (Plasmoid.configuration.showVisibility) {
-            appendMetric(i18n("Visibility"), visibilityText);
-        }
-
-        if (Plasmoid.configuration.showCloudCover) {
-            appendMetric(i18n("Cloud cover"), cloudCoverText);
-        }
-
-        if (Plasmoid.configuration.showPrecipitation) {
-            appendMetric(i18n("Precipitation"), precipitationAmountText);
-        }
-
-        if (Plasmoid.configuration.showSunTimes) {
-            appendMetric(i18n("Sunrise"), sunriseText);
-            appendMetric(i18n("Sunset"), sunsetText);
-        }
-
-        if (Plasmoid.configuration.showUpdated) {
-            appendMetric(i18n("Updated"), updatedText);
+        for (let i = 0; i < items.length; ++i) {
+            metricModel.append(items[i]);
         }
     }
 
@@ -474,66 +290,40 @@ PlasmoidItem {
         hourlyModel.clear();
         resetHourlySummary();
 
-        const times = hourly.time || [];
-        const maxItems = configuredHourlyCount();
-        const referenceTime = currentDateTimeKey();
-        let startIndex = -1;
+        const hourlyData = WeatherLogic.buildHourlyItems(hourly, {
+            "maxItems": configuredHourlyCount(),
+            "referenceTime": currentDateTimeKey(),
+            "previousSelectionTimeKey": previouslySelectedTime,
+            "formatTime": formatTime,
+            "formatTemperature": formatTemperature,
+            "formatPercent": formatPercent,
+            "formatWind": formatWind,
+            "describeWeather": weatherDescription,
+            "iconForWeather": weatherIconName
+        });
 
-        for (let i = 0; i < times.length; ++i) {
-            if (String(times[i]) > referenceTime) {
-                startIndex = i;
-                break;
-            }
-        }
-
-        if (startIndex < 0) {
-            startIndex = Math.max(0, times.length - maxItems);
-        }
-
-        for (let i = startIndex; i < times.length && hourlyModel.count < maxItems; ++i) {
-            const item = {
-                "timeKey": String(times[i]),
-                "timeLabel": formatTime(times[i]),
-                "description": weatherDescription(hourly.weather_code[i]),
-                "temperature": formatTemperature(hourly.temperature_2m[i]),
-                "humidity": formatPercent(hourly.relative_humidity_2m[i]),
-                "precipitation": formatPercent(hourly.precipitation_probability[i]),
-                "wind": formatWind(hourly.wind_speed_10m[i], hourly.wind_direction_10m[i]),
-                "iconName": weatherIconName(hourly.weather_code[i], Number(hourly.is_day[i]) === 1)
-            };
-
-            hourlyModel.append(item);
+        for (let i = 0; i < hourlyData.items.length; ++i) {
+            hourlyModel.append(hourlyData.items[i]);
         }
 
         if (hourlyModel.count > 0) {
-            let restoredIndex = 0;
-
-            if (previouslySelectedTime.length > 0) {
-                for (let i = 0; i < hourlyModel.count; ++i) {
-                    if (String(hourlyModel.get(i).timeKey) === previouslySelectedTime) {
-                        restoredIndex = i;
-                        break;
-                    }
-                }
-            }
-
-            selectHour(restoredIndex);
+            selectHour(hourlyData.selectedIndex);
         }
     }
 
     function populateDailyData(daily) {
         dailyModel.clear();
 
-        const days = daily.time || [];
-        const startIndex = resolveCurrentDayIndex(days);
+        const items = WeatherLogic.buildDailyItems(daily, {
+            "currentDate": currentDateKey(),
+            "formatShortDay": formatShortDay,
+            "describeWeather": weatherDescription,
+            "formatTemperature": formatTemperature,
+            "iconForWeather": weatherIconName
+        });
 
-        for (let i = startIndex + 1; i < days.length; ++i) {
-            dailyModel.append({
-                "dayLabel": formatShortDay(days[i]),
-                "description": weatherDescription(daily.weather_code[i]),
-                "temperatureRange": formatTemperature(daily.temperature_2m_max[i]) + " / " + formatTemperature(daily.temperature_2m_min[i]),
-                "iconName": weatherIconName(daily.weather_code[i], true)
-            });
+        for (let i = 0; i < items.length; ++i) {
+            dailyModel.append(items[i]);
         }
     }
 

@@ -16,7 +16,7 @@
         "Icon": "weather-clear",
         "Id": "local.weather.focused",
         "License": "GPL-3.0-or-later",
-        "Name": "Focused Weather",
+        "Name": "Better Weather",
         "Version": "1.0",
         "Website": "https://github.com/andreicosmin02/better-weather"
     },

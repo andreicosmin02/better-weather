@@ -2,7 +2,7 @@
 
 A focused KDE Plasma weather widget with current conditions, upcoming hours, and next days.
 
-![Focused Weather screenshot](assets/focused-weather.png)
+![Better Weather screenshot](assets/focused-weather.png)
 
 ## Features
 
@@ -35,7 +35,7 @@ If the widget is already installed and you want to update it from the repo check
 kpackagetool6 --type Plasma/Applet --upgrade .
 ```
 
-Then add `Focused Weather` from Plasma's widget picker.
+Then add `Better Weather` from Plasma's widget picker.
 
 ## Tests
 

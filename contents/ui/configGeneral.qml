@@ -2,33 +2,58 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15 as QQC2
 import QtQuick.Layouts 1.15
 import org.kde.kirigami 2.20 as Kirigami
+import org.kde.kcmutils as KCM
 
-Item {
+KCM.SimpleKCM {
     id: page
 
     property string cfg_locationName: "Brasov"
+    property string cfg_locationNameDefault: "Brasov"
     property double cfg_latitude: 45.64860916137695
+    property double cfg_latitudeDefault: 45.64860916137695
     property double cfg_longitude: 25.606130599975586
+    property double cfg_longitudeDefault: 25.606130599975586
     property string cfg_timezone: "Europe/Bucharest"
+    property string cfg_timezoneDefault: "Europe/Bucharest"
     property int cfg_hourlyCount: 8
+    property int cfg_hourlyCountDefault: 8
     property int cfg_refreshMinutes: 30
+    property int cfg_refreshMinutesDefault: 30
     property bool cfg_use24Hour: true
+    property bool cfg_use24HourDefault: true
     property string cfg_fontFamily: ""
+    property string cfg_fontFamilyDefault: ""
     property string cfg_fontWeight: "Light"
+    property string cfg_fontWeightDefault: "Light"
     property string cfg_windUnit: "kmh"
+    property string cfg_windUnitDefault: "kmh"
     property string cfg_pressureUnit: "hPa"
+    property string cfg_pressureUnitDefault: "hPa"
     property string cfg_distanceUnit: "km"
+    property string cfg_distanceUnitDefault: "km"
     property string cfg_precipitationUnit: "mm"
+    property string cfg_precipitationUnitDefault: "mm"
     property bool cfg_showFeelsLike: true
+    property bool cfg_showFeelsLikeDefault: true
     property bool cfg_showHumidity: true
+    property bool cfg_showHumidityDefault: true
     property bool cfg_showWind: true
+    property bool cfg_showWindDefault: true
     property bool cfg_showGusts: true
+    property bool cfg_showGustsDefault: true
     property bool cfg_showPressure: true
+    property bool cfg_showPressureDefault: true
     property bool cfg_showVisibility: false
+    property bool cfg_showVisibilityDefault: false
     property bool cfg_showCloudCover: false
+    property bool cfg_showCloudCoverDefault: false
     property bool cfg_showPrecipitation: true
+    property bool cfg_showPrecipitationDefault: true
     property bool cfg_showSunTimes: true
+    property bool cfg_showSunTimesDefault: true
     property bool cfg_showUpdated: false
+    property bool cfg_showUpdatedDefault: false
+    title: i18n("General")
 
     property bool lookupBusy: false
     property string lookupError: ""

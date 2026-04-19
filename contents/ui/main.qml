@@ -10,8 +10,8 @@ import "weather-logic.js" as WeatherLogic
 PlasmoidItem {
     id: root
 
-    preferredRepresentation: Plasmoid.compactRepresentation
-    Plasmoid.backgroundHints: "ShadowBackground"
+    preferredRepresentation: Plasmoid.formFactor === PlasmaCore.Types.Planar ? fullRepresentation : compactRepresentation
+    Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground
 
     property bool loading: false
     property string errorMessage: ""

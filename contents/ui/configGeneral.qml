@@ -25,6 +25,8 @@ KCM.SimpleKCM {
     property string cfg_fontFamilyDefault: ""
     property string cfg_fontWeight: "Light"
     property string cfg_fontWeightDefault: "Light"
+    property string cfg_temperatureUnit: "celsius"
+    property string cfg_temperatureUnitDefault: "celsius"
     property string cfg_windUnit: "kmh"
     property string cfg_windUnitDefault: "kmh"
     property string cfg_pressureUnit: "hPa"
@@ -59,13 +61,19 @@ KCM.SimpleKCM {
     property string lookupError: ""
     property bool showAdvancedLocation: false
 
-    readonly property int settingsColumns: width > Kirigami.Units.gridUnit * 30 ? 2 : 1
+    readonly property int settingsColumns: width >= Kirigami.Units.gridUnit * 42 ? 2 : 1
+    readonly property int cardMinimumWidth: Kirigami.Units.gridUnit * 18
+    readonly property int comboMinimumWidth: Kirigami.Units.gridUnit * 10
     readonly property color frameColor: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.08)
+    readonly property color subtleFrameColor: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.04)
 
-    implicitWidth: Kirigami.Units.gridUnit * 28
-    implicitHeight: Kirigami.Units.gridUnit * 28
+    implicitWidth: Kirigami.Units.gridUnit * 40
 
     function syncComboBox(comboBox, model, value) {
+        if (!comboBox || !model) {
+            return;
+        }
+
         for (let i = 0; i < model.count; ++i) {
             if (model.get(i).value === value) {
                 comboBox.currentIndex = i;
@@ -203,6 +211,13 @@ KCM.SimpleKCM {
     }
 
     ListModel {
+        id: temperatureUnitsModel
+        ListElement { text: "Celsius (\u00B0C)"; value: "celsius" }
+        ListElement { text: "Fahrenheit (\u00B0F)"; value: "fahrenheit" }
+        ListElement { text: "Kelvin (K)"; value: "kelvin" }
+    }
+
+    ListModel {
         id: windUnitsModel
         ListElement { text: "km/h"; value: "kmh" }
         ListElement { text: "m/s"; value: "ms" }
@@ -228,6 +243,7 @@ KCM.SimpleKCM {
         ListElement { text: "in"; value: "in" }
     }
 
+    onCfg_temperatureUnitChanged: syncComboBox(temperatureUnitComboBox, temperatureUnitsModel, cfg_temperatureUnit)
     onCfg_fontFamilyChanged: syncComboBox(fontFamilyComboBox, fontsModel, cfg_fontFamily)
     onCfg_fontWeightChanged: syncComboBox(fontWeightComboBox, weightsModel, cfg_fontWeight)
     onCfg_windUnitChanged: syncComboBox(windUnitComboBox, windUnitsModel, cfg_windUnit)
@@ -239,139 +255,136 @@ KCM.SimpleKCM {
         locationSearchField.text = cfg_locationName;
         syncComboBox(fontFamilyComboBox, fontsModel, cfg_fontFamily);
         syncComboBox(fontWeightComboBox, weightsModel, cfg_fontWeight);
+        syncComboBox(temperatureUnitComboBox, temperatureUnitsModel, cfg_temperatureUnit);
         syncComboBox(windUnitComboBox, windUnitsModel, cfg_windUnit);
         syncComboBox(pressureUnitComboBox, pressureUnitsModel, cfg_pressureUnit);
         syncComboBox(distanceUnitComboBox, distanceUnitsModel, cfg_distanceUnit);
         syncComboBox(precipitationUnitComboBox, precipitationUnitsModel, cfg_precipitationUnit);
     }
 
-    QQC2.ScrollView {
-        anchors.fill: parent
-        clip: true
-        contentWidth: availableWidth
+    Item {
+        id: contents
+        anchors.left: parent.left
+        anchors.right: parent.right
+        implicitHeight: rootColumn.implicitHeight
 
-        Item {
-            width: availableWidth
-            implicitHeight: rootColumn.implicitHeight + Kirigami.Units.largeSpacing * 2
+        ColumnLayout {
+            id: rootColumn
+            anchors.left: parent.left
+            anchors.right: parent.right
+            spacing: Kirigami.Units.largeSpacing
 
-            ColumnLayout {
-                id: rootColumn
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.top: parent.top
-                anchors.margins: Kirigami.Units.largeSpacing
-                spacing: Kirigami.Units.largeSpacing
+            QQC2.Frame {
+                Layout.fillWidth: true
+                padding: Kirigami.Units.largeSpacing
 
-                QQC2.Frame {
-                    Layout.fillWidth: true
-                    padding: Kirigami.Units.largeSpacing
+                background: Rectangle {
+                    radius: Kirigami.Units.largeSpacing
+                    color: Kirigami.Theme.backgroundColor
+                    border.color: page.frameColor
+                }
 
-                    background: Rectangle {
-                        radius: Kirigami.Units.largeSpacing
-                        color: Kirigami.Theme.backgroundColor
-                        border.color: page.frameColor
+                contentItem: ColumnLayout {
+                    spacing: Kirigami.Units.mediumSpacing
+
+                    Kirigami.Heading {
+                        text: i18n("Location")
+                        level: 2
                     }
 
-                    contentItem: ColumnLayout {
+                    QQC2.Label {
+                        Layout.fillWidth: true
+                        text: i18n("Search for a city and pick a result. The widget fills in the coordinates automatically.")
+                        color: Kirigami.Theme.disabledTextColor
+                        wrapMode: Text.Wrap
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing
 
-                        Kirigami.Heading {
-                            text: i18n("Location")
-                            level: 2
+                        Kirigami.SearchField {
+                            id: locationSearchField
+                            Layout.fillWidth: true
+                            Layout.minimumWidth: page.cardMinimumWidth
+                            placeholderText: i18n("Search city or town")
+                            enabled: !lookupBusy
+                            onAccepted: page.searchLocations()
                         }
 
-                        QQC2.Label {
-                            Layout.fillWidth: true
-                            text: i18n("Search for a city and pick a result. The widget fills in the coordinates automatically.")
-                            color: Kirigami.Theme.disabledTextColor
-                            wrapMode: Text.Wrap
+                        QQC2.Button {
+                            text: i18n("Search")
+                            icon.name: "search"
+                            display: QQC2.AbstractButton.TextBesideIcon
+                            enabled: !lookupBusy && locationSearchField.text.trim().length >= 2
+                            onClicked: page.searchLocations()
                         }
+                    }
 
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: Kirigami.Units.smallSpacing
+                    Kirigami.InlineMessage {
+                        Layout.fillWidth: true
+                        visible: lookupBusy || lookupError.length > 0
+                        showCloseButton: false
+                        type: lookupError.length > 0 ? Kirigami.MessageType.Error : Kirigami.MessageType.Information
+                        text: lookupError.length > 0 ? lookupError : i18n("Looking up locations...")
+                    }
 
-                            QQC2.TextField {
-                                id: locationSearchField
-                                Layout.fillWidth: true
-                                placeholderText: i18n("Search city or town")
-                                onAccepted: page.searchLocations()
-                            }
+                    ListView {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: visible ? Math.min(contentHeight, Kirigami.Units.gridUnit * 11) : 0
+                        visible: locationResultsModel.count > 0
+                        clip: true
+                        interactive: contentHeight > height
+                        spacing: Kirigami.Units.smallSpacing
+                        model: locationResultsModel
 
-                            QQC2.Button {
-                                text: i18n("Search")
-                                onClicked: page.searchLocations()
-                            }
-                        }
+                        delegate: QQC2.ItemDelegate {
+                            width: ListView.view.width
+                            onClicked: page.applyLocation(locationName, latitudeValue, longitudeValue, timezoneValue, subtitle)
 
-                        RowLayout {
-                            Layout.fillWidth: true
-                            visible: lookupBusy
-                            spacing: Kirigami.Units.smallSpacing
+                            contentItem: ColumnLayout {
+                                spacing: 2
 
-                            QQC2.BusyIndicator {
-                                running: lookupBusy
-                            }
+                                QQC2.Label {
+                                    text: subtitle.length > 0 ? locationName + ", " + subtitle : locationName
+                                    font.weight: Font.DemiBold
+                                    elide: Text.ElideRight
+                                }
 
-                            QQC2.Label {
-                                text: i18n("Looking up locations...")
-                                color: Kirigami.Theme.disabledTextColor
-                            }
-                        }
-
-                        QQC2.Label {
-                            Layout.fillWidth: true
-                            visible: lookupError.length > 0
-                            text: lookupError
-                            color: Kirigami.Theme.negativeTextColor
-                            wrapMode: Text.Wrap
-                        }
-
-                        ListView {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: visible ? Math.min(contentHeight, Kirigami.Units.gridUnit * 11) : 0
-                            visible: locationResultsModel.count > 0
-                            clip: true
-                            spacing: Kirigami.Units.smallSpacing
-                            model: locationResultsModel
-
-                            delegate: QQC2.ItemDelegate {
-                                width: ListView.view.width
-                                onClicked: page.applyLocation(locationName, latitudeValue, longitudeValue, timezoneValue, subtitle)
-
-                                contentItem: ColumnLayout {
-                                    spacing: 2
-
-                                    QQC2.Label {
-                                        text: subtitle.length > 0 ? locationName + ", " + subtitle : locationName
-                                        font.weight: Font.DemiBold
-                                        elide: Text.ElideRight
-                                    }
-
-                                    QQC2.Label {
-                                        text: i18n("Timezone: %1  |  %2, %3", timezoneValue, Number(latitudeValue).toFixed(3), Number(longitudeValue).toFixed(3))
-                                        color: Kirigami.Theme.disabledTextColor
-                                        wrapMode: Text.Wrap
-                                    }
+                                QQC2.Label {
+                                    text: i18n("Timezone: %1  |  %2, %3", timezoneValue, Number(latitudeValue).toFixed(3), Number(longitudeValue).toFixed(3))
+                                    color: Kirigami.Theme.disabledTextColor
+                                    wrapMode: Text.Wrap
                                 }
                             }
                         }
+                    }
 
-                        Rectangle {
-                            Layout.fillWidth: true
-                            implicitHeight: selectedLocationRow.implicitHeight + Kirigami.Units.smallSpacing * 2
-                            radius: Kirigami.Units.smallSpacing
-                            color: Kirigami.Theme.alternateBackgroundColor
-                            border.color: page.frameColor
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: selectedLocationRow.implicitHeight + Kirigami.Units.smallSpacing * 2
+                        radius: Kirigami.Units.smallSpacing
+                        color: Kirigami.Theme.alternateBackgroundColor
+                        border.color: page.subtleFrameColor
 
-                            RowLayout {
-                                id: selectedLocationRow
-                                anchors.fill: parent
-                                anchors.margins: Kirigami.Units.smallSpacing
-                                spacing: Kirigami.Units.smallSpacing
+                        RowLayout {
+                            id: selectedLocationRow
+                            anchors.fill: parent
+                            anchors.margins: Kirigami.Units.smallSpacing
+                            spacing: Kirigami.Units.smallSpacing
+
+                            Kirigami.Icon {
+                                source: "mark-location-symbolic"
+                                implicitWidth: Kirigami.Units.iconSizes.smallMedium
+                                implicitHeight: Kirigami.Units.iconSizes.smallMedium
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 0
 
                                 QQC2.Label {
-                                    text: i18n("Selected")
+                                    text: i18n("Selected location")
                                     color: Kirigami.Theme.disabledTextColor
                                 }
 
@@ -383,15 +396,28 @@ KCM.SimpleKCM {
                                 }
                             }
                         }
+                    }
 
-                        QQC2.Button {
-                            text: showAdvancedLocation ? i18n("Hide advanced location fields") : i18n("Show advanced location fields")
-                            onClicked: showAdvancedLocation = !showAdvancedLocation
+                    QQC2.Button {
+                        text: showAdvancedLocation ? i18n("Hide advanced location fields") : i18n("Edit coordinates and timezone")
+                        icon.name: showAdvancedLocation ? "go-up-symbolic" : "settings-configure"
+                        display: QQC2.AbstractButton.TextBesideIcon
+                        onClicked: showAdvancedLocation = !showAdvancedLocation
+                    }
+
+                    QQC2.Frame {
+                        Layout.fillWidth: true
+                        visible: showAdvancedLocation
+                        padding: Kirigami.Units.mediumSpacing
+
+                        background: Rectangle {
+                            radius: Kirigami.Units.mediumSpacing
+                            color: Kirigami.Theme.alternateBackgroundColor
+                            border.color: page.subtleFrameColor
                         }
 
-                        Kirigami.FormLayout {
-                            Layout.fillWidth: true
-                            visible: showAdvancedLocation
+                        contentItem: Kirigami.FormLayout {
+                            width: parent.width
 
                             QQC2.TextField {
                                 id: locationNameField
@@ -435,222 +461,342 @@ KCM.SimpleKCM {
                         }
                     }
                 }
+            }
 
-                GridLayout {
+            GridLayout {
+                Layout.fillWidth: true
+                columns: page.settingsColumns
+                rowSpacing: Kirigami.Units.largeSpacing
+                columnSpacing: Kirigami.Units.largeSpacing
+
+                QQC2.Frame {
                     Layout.fillWidth: true
-                    columns: page.settingsColumns
-                    rowSpacing: Kirigami.Units.largeSpacing
-                    columnSpacing: Kirigami.Units.largeSpacing
+                    Layout.minimumWidth: page.cardMinimumWidth
+                    Layout.alignment: Qt.AlignTop
+                    padding: Kirigami.Units.largeSpacing
 
-                    QQC2.Frame {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignTop
-                        padding: Kirigami.Units.largeSpacing
+                    background: Rectangle {
+                        radius: Kirigami.Units.largeSpacing
+                        color: Kirigami.Theme.backgroundColor
+                        border.color: page.frameColor
+                    }
 
-                        background: Rectangle {
-                            radius: Kirigami.Units.largeSpacing
-                            color: Kirigami.Theme.backgroundColor
-                            border.color: page.frameColor
+                    contentItem: ColumnLayout {
+                        spacing: Kirigami.Units.smallSpacing
+
+                        Kirigami.Heading {
+                            text: i18n("Forecast")
+                            level: 2
                         }
 
-                        contentItem: ColumnLayout {
-                            spacing: Kirigami.Units.smallSpacing
+                        QQC2.Label {
+                            Layout.fillWidth: true
+                            text: i18n("Control how much forecast data appears in the popup and how often it refreshes.")
+                            color: Kirigami.Theme.disabledTextColor
+                            wrapMode: Text.Wrap
+                        }
 
-                            Kirigami.Heading {
-                                text: i18n("Forecast")
-                                level: 2
+                        Kirigami.FormLayout {
+                            Layout.fillWidth: true
+
+                            QQC2.SpinBox {
+                                Kirigami.FormData.label: i18n("Hours shown:")
+                                from: 4
+                                to: 24
+                                value: page.cfg_hourlyCount
+                                onValueChanged: page.cfg_hourlyCount = value
+                            }
+
+                            QQC2.SpinBox {
+                                Kirigami.FormData.label: i18n("Refresh every:")
+                                from: 5
+                                to: 120
+                                stepSize: 5
+                                value: page.cfg_refreshMinutes
+                                textFromValue: function(value) { return i18n("%1 min", value); }
+                                valueFromText: function(text) { return parseInt(text, 10); }
+                                onValueChanged: page.cfg_refreshMinutes = value
+                            }
+
+                            QQC2.CheckBox {
+                                Kirigami.FormData.label: i18n("Time format:")
+                                text: i18n("Use 24-hour time")
+                                checked: page.cfg_use24Hour
+                                onToggled: page.cfg_use24Hour = checked
+                            }
+                        }
+                    }
+                }
+
+                QQC2.Frame {
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: page.cardMinimumWidth
+                    Layout.alignment: Qt.AlignTop
+                    padding: Kirigami.Units.largeSpacing
+
+                    background: Rectangle {
+                        radius: Kirigami.Units.largeSpacing
+                        color: Kirigami.Theme.backgroundColor
+                        border.color: page.frameColor
+                    }
+
+                    contentItem: ColumnLayout {
+                        spacing: Kirigami.Units.smallSpacing
+
+                        Kirigami.Heading {
+                            text: i18n("Appearance")
+                            level: 2
+                        }
+
+                        QQC2.Label {
+                            Layout.fillWidth: true
+                            text: i18n("Tune the panel text style without editing the widget manually.")
+                            color: Kirigami.Theme.disabledTextColor
+                            wrapMode: Text.Wrap
+                        }
+
+                        Kirigami.FormLayout {
+                            Layout.fillWidth: true
+
+                            QQC2.ComboBox {
+                                id: fontFamilyComboBox
+                                Kirigami.FormData.label: i18n("Font family:")
+                                Layout.minimumWidth: Kirigami.Units.gridUnit * 13
+                                model: fontsModel
+                                textRole: "text"
+
+                                onActivated: {
+                                    const current = model.get(currentIndex);
+                                    if (current) {
+                                        page.cfg_fontFamily = current.value;
+                                    }
+                                }
+                            }
+
+                            QQC2.ComboBox {
+                                id: fontWeightComboBox
+                                Kirigami.FormData.label: i18n("Font weight:")
+                                Layout.minimumWidth: page.comboMinimumWidth
+                                model: weightsModel
+                                textRole: "text"
+
+                                onActivated: {
+                                    const current = model.get(currentIndex);
+                                    if (current) {
+                                        page.cfg_fontWeight = current.value;
+                                    }
+                                }
                             }
 
                             QQC2.Label {
-                                Layout.fillWidth: true
-                                text: i18n("Control how much forecast data appears in the popup and how often it refreshes.")
+                                Kirigami.FormData.label: i18n("Source:")
+                                text: i18n("Open-Meteo forecast API")
                                 color: Kirigami.Theme.disabledTextColor
                                 wrapMode: Text.Wrap
                             }
+                        }
+                    }
+                }
 
-                            Kirigami.FormLayout {
-                                Layout.fillWidth: true
+                QQC2.Frame {
+                    Layout.fillWidth: true
+                    Layout.columnSpan: page.settingsColumns
+                    Layout.alignment: Qt.AlignTop
+                    padding: Kirigami.Units.largeSpacing
 
-                                QQC2.SpinBox {
-                                    Kirigami.FormData.label: i18n("Hours shown:")
-                                    from: 4
-                                    to: 24
-                                    value: page.cfg_hourlyCount
-                                    onValueChanged: page.cfg_hourlyCount = value
+                    background: Rectangle {
+                        radius: Kirigami.Units.largeSpacing
+                        color: Kirigami.Theme.backgroundColor
+                        border.color: page.frameColor
+                    }
+
+                    contentItem: ColumnLayout {
+                        spacing: Kirigami.Units.smallSpacing
+
+                        Kirigami.Heading {
+                            text: i18n("Units")
+                            level: 2
+                        }
+
+                        QQC2.Label {
+                            Layout.fillWidth: true
+                            text: i18n("Choose how temperature, wind, pressure, visibility, and precipitation are displayed.")
+                            color: Kirigami.Theme.disabledTextColor
+                            wrapMode: Text.Wrap
+                        }
+
+                        Kirigami.FormLayout {
+                            Layout.fillWidth: true
+
+                            QQC2.ComboBox {
+                                id: temperatureUnitComboBox
+                                Kirigami.FormData.label: i18n("Temperature:")
+                                Layout.minimumWidth: page.comboMinimumWidth
+                                model: temperatureUnitsModel
+                                textRole: "text"
+
+                                onActivated: {
+                                    const current = model.get(currentIndex);
+                                    if (current) {
+                                        page.cfg_temperatureUnit = current.value;
+                                    }
                                 }
+                            }
 
-                                QQC2.SpinBox {
-                                    Kirigami.FormData.label: i18n("Refresh every:")
-                                    from: 5
-                                    to: 120
-                                    stepSize: 5
-                                    value: page.cfg_refreshMinutes
-                                    textFromValue: function(value) { return i18n("%1 min", value); }
-                                    valueFromText: function(text) { return parseInt(text, 10); }
-                                    onValueChanged: page.cfg_refreshMinutes = value
+                            QQC2.ComboBox {
+                                id: windUnitComboBox
+                                Kirigami.FormData.label: i18n("Wind:")
+                                Layout.minimumWidth: page.comboMinimumWidth
+                                model: windUnitsModel
+                                textRole: "text"
+
+                                onActivated: {
+                                    const current = model.get(currentIndex);
+                                    if (current) {
+                                        page.cfg_windUnit = current.value;
+                                    }
                                 }
+                            }
 
-                                QQC2.CheckBox {
-                                    Kirigami.FormData.label: i18n("Time format:")
-                                    text: i18n("Use 24-hour time")
-                                    checked: page.cfg_use24Hour
-                                    onToggled: page.cfg_use24Hour = checked
+                            QQC2.ComboBox {
+                                id: pressureUnitComboBox
+                                Kirigami.FormData.label: i18n("Pressure:")
+                                Layout.minimumWidth: page.comboMinimumWidth
+                                model: pressureUnitsModel
+                                textRole: "text"
+
+                                onActivated: {
+                                    const current = model.get(currentIndex);
+                                    if (current) {
+                                        page.cfg_pressureUnit = current.value;
+                                    }
+                                }
+                            }
+
+                            QQC2.ComboBox {
+                                id: distanceUnitComboBox
+                                Kirigami.FormData.label: i18n("Visibility:")
+                                Layout.minimumWidth: page.comboMinimumWidth
+                                model: distanceUnitsModel
+                                textRole: "text"
+
+                                onActivated: {
+                                    const current = model.get(currentIndex);
+                                    if (current) {
+                                        page.cfg_distanceUnit = current.value;
+                                    }
+                                }
+                            }
+
+                            QQC2.ComboBox {
+                                id: precipitationUnitComboBox
+                                Kirigami.FormData.label: i18n("Precipitation:")
+                                Layout.minimumWidth: page.comboMinimumWidth
+                                model: precipitationUnitsModel
+                                textRole: "text"
+
+                                onActivated: {
+                                    const current = model.get(currentIndex);
+                                    if (current) {
+                                        page.cfg_precipitationUnit = current.value;
+                                    }
                                 }
                             }
                         }
                     }
+                }
 
-                    QQC2.Frame {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignTop
-                        padding: Kirigami.Units.largeSpacing
+                QQC2.Frame {
+                    Layout.fillWidth: true
+                    Layout.columnSpan: page.settingsColumns
+                    Layout.alignment: Qt.AlignTop
+                    padding: Kirigami.Units.largeSpacing
 
-                        background: Rectangle {
-                            radius: Kirigami.Units.largeSpacing
-                            color: Kirigami.Theme.backgroundColor
-                            border.color: page.frameColor
-                        }
-
-                        contentItem: ColumnLayout {
-                            spacing: Kirigami.Units.smallSpacing
-
-                            Kirigami.Heading {
-                                text: i18n("Appearance")
-                                level: 2
-                            }
-
-                            QQC2.Label {
-                                Layout.fillWidth: true
-                                text: i18n("Tune the panel text style without editing the widget manually.")
-                                color: Kirigami.Theme.disabledTextColor
-                                wrapMode: Text.Wrap
-                            }
-
-                            Kirigami.FormLayout {
-                                Layout.fillWidth: true
-
-                                QQC2.ComboBox {
-                                    id: fontFamilyComboBox
-                                    Kirigami.FormData.label: i18n("Font family:")
-                                    model: fontsModel
-                                    textRole: "text"
-
-                                    onActivated: {
-                                        const current = model.get(currentIndex);
-                                        if (current) {
-                                            page.cfg_fontFamily = current.value;
-                                        }
-                                    }
-                                }
-
-                                QQC2.ComboBox {
-                                    id: fontWeightComboBox
-                                    Kirigami.FormData.label: i18n("Font weight:")
-                                    model: weightsModel
-                                    textRole: "text"
-
-                                    onActivated: {
-                                        const current = model.get(currentIndex);
-                                        if (current) {
-                                            page.cfg_fontWeight = current.value;
-                                        }
-                                    }
-                                }
-
-                                QQC2.Label {
-                                    Kirigami.FormData.label: i18n("Source:")
-                                    text: i18n("Open-Meteo forecast API")
-                                    color: Kirigami.Theme.disabledTextColor
-                                    wrapMode: Text.Wrap
-                                }
-                            }
-                        }
+                    background: Rectangle {
+                        radius: Kirigami.Units.largeSpacing
+                        color: Kirigami.Theme.backgroundColor
+                        border.color: page.frameColor
                     }
 
-                    QQC2.Frame {
-                        Layout.fillWidth: true
-                        Layout.columnSpan: page.settingsColumns
-                        padding: Kirigami.Units.largeSpacing
+                    contentItem: ColumnLayout {
+                        spacing: Kirigami.Units.smallSpacing
 
-                        background: Rectangle {
-                            radius: Kirigami.Units.largeSpacing
-                            color: Kirigami.Theme.backgroundColor
-                            border.color: page.frameColor
+                        Kirigami.Heading {
+                            text: i18n("Popup Details")
+                            level: 2
                         }
 
-                        contentItem: ColumnLayout {
-                            spacing: Kirigami.Units.smallSpacing
+                        QQC2.Label {
+                            Layout.fillWidth: true
+                            text: i18n("Choose which detail rows appear in the expanded forecast popup.")
+                            color: Kirigami.Theme.disabledTextColor
+                            wrapMode: Text.Wrap
+                        }
 
-                            Kirigami.Heading {
-                                text: i18n("Units")
-                                level: 2
+                        GridLayout {
+                            Layout.fillWidth: true
+                            columns: page.settingsColumns
+                            columnSpacing: Kirigami.Units.largeSpacing
+                            rowSpacing: Kirigami.Units.smallSpacing
+
+                            QQC2.CheckBox {
+                                text: i18n("Feels like")
+                                checked: page.cfg_showFeelsLike
+                                onToggled: page.cfg_showFeelsLike = checked
                             }
 
-                            QQC2.Label {
-                                Layout.fillWidth: true
-                                text: i18n("Choose how wind, pressure, visibility, and precipitation are displayed.")
-                                color: Kirigami.Theme.disabledTextColor
-                                wrapMode: Text.Wrap
+                            QQC2.CheckBox {
+                                text: i18n("Humidity")
+                                checked: page.cfg_showHumidity
+                                onToggled: page.cfg_showHumidity = checked
                             }
 
-                            Kirigami.FormLayout {
-                                Layout.fillWidth: true
+                            QQC2.CheckBox {
+                                text: i18n("Wind")
+                                checked: page.cfg_showWind
+                                onToggled: page.cfg_showWind = checked
+                            }
 
-                                QQC2.ComboBox {
-                                    id: windUnitComboBox
-                                    Kirigami.FormData.label: i18n("Wind:")
-                                    model: windUnitsModel
-                                    textRole: "text"
+                            QQC2.CheckBox {
+                                text: i18n("Gusts")
+                                checked: page.cfg_showGusts
+                                onToggled: page.cfg_showGusts = checked
+                            }
 
-                                    onActivated: {
-                                        const current = model.get(currentIndex);
-                                        if (current) {
-                                            page.cfg_windUnit = current.value;
-                                        }
-                                    }
-                                }
+                            QQC2.CheckBox {
+                                text: i18n("Pressure")
+                                checked: page.cfg_showPressure
+                                onToggled: page.cfg_showPressure = checked
+                            }
 
-                                QQC2.ComboBox {
-                                    id: pressureUnitComboBox
-                                    Kirigami.FormData.label: i18n("Pressure:")
-                                    model: pressureUnitsModel
-                                    textRole: "text"
+                            QQC2.CheckBox {
+                                text: i18n("Visibility")
+                                checked: page.cfg_showVisibility
+                                onToggled: page.cfg_showVisibility = checked
+                            }
 
-                                    onActivated: {
-                                        const current = model.get(currentIndex);
-                                        if (current) {
-                                            page.cfg_pressureUnit = current.value;
-                                        }
-                                    }
-                                }
+                            QQC2.CheckBox {
+                                text: i18n("Cloud cover")
+                                checked: page.cfg_showCloudCover
+                                onToggled: page.cfg_showCloudCover = checked
+                            }
 
-                                QQC2.ComboBox {
-                                    id: distanceUnitComboBox
-                                    Kirigami.FormData.label: i18n("Visibility:")
-                                    model: distanceUnitsModel
-                                    textRole: "text"
+                            QQC2.CheckBox {
+                                text: i18n("Precipitation")
+                                checked: page.cfg_showPrecipitation
+                                onToggled: page.cfg_showPrecipitation = checked
+                            }
 
-                                    onActivated: {
-                                        const current = model.get(currentIndex);
-                                        if (current) {
-                                            page.cfg_distanceUnit = current.value;
-                                        }
-                                    }
-                                }
+                            QQC2.CheckBox {
+                                text: i18n("Sunrise and sunset")
+                                checked: page.cfg_showSunTimes
+                                onToggled: page.cfg_showSunTimes = checked
+                            }
 
-                                QQC2.ComboBox {
-                                    id: precipitationUnitComboBox
-                                    Kirigami.FormData.label: i18n("Precipitation:")
-                                    model: precipitationUnitsModel
-                                    textRole: "text"
-
-                                    onActivated: {
-                                        const current = model.get(currentIndex);
-                                        if (current) {
-                                            page.cfg_precipitationUnit = current.value;
-                                        }
-                                    }
-                                }
+                            QQC2.CheckBox {
+                                text: i18n("Updated time")
+                                checked: page.cfg_showUpdated
+                                onToggled: page.cfg_showUpdated = checked
                             }
                         }
                     }

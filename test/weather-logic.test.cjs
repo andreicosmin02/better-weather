@@ -17,7 +17,10 @@ test("format helpers handle invalid values and unit conversions", () => {
     assert.equal(WeatherLogic.formatNumber(12.345, 2), "12.35");
 
     assert.equal(WeatherLogic.formatTemperature(undefined), "--");
-    assert.equal(WeatherLogic.formatTemperature(12.4), "12°");
+    assert.equal(WeatherLogic.formatTemperature(12.4, "celsius"), "12°");
+    assert.equal(WeatherLogic.formatTemperature(12.4, "fahrenheit"), "54°F");
+    assert.equal(WeatherLogic.formatTemperature(12.4, "kelvin"), "286 K");
+    assert.equal(WeatherLogic.formatTemperature(12.4, "unexpected"), "12°");
 
     assert.equal(WeatherLogic.formatPercent(undefined), "--");
     assert.equal(WeatherLogic.formatPercent(46.2), "46%");

@@ -126,12 +126,17 @@ PlasmoidItem {
         return ["mm", "in"].includes(value) ? value : "mm";
     }
 
+    function configuredTemperatureUnit() {
+        const value = String(Plasmoid.configuration.temperatureUnit || "celsius");
+        return ["celsius", "fahrenheit", "kelvin"].includes(value) ? value : "celsius";
+    }
+
     function formatNumber(value, decimals) {
         return WeatherLogic.formatNumber(value, decimals);
     }
 
     function formatTemperature(value) {
-        return WeatherLogic.formatTemperature(value);
+        return WeatherLogic.formatTemperature(value, configuredTemperatureUnit());
     }
 
     function formatPercent(value) {
@@ -406,6 +411,7 @@ PlasmoidItem {
         function onHourlyCountChanged() { root.requestForecast(); }
         function onRefreshMinutesChanged() { refreshTimer.interval = root.configuredRefreshMinutes() * 60 * 1000; }
         function onUse24HourChanged() { if (root.forecastData) { root.applyForecast(root.forecastData); } else { root.requestForecast(); } }
+        function onTemperatureUnitChanged() { if (root.forecastData) { root.applyForecast(root.forecastData); } }
         function onShowFeelsLikeChanged() { root.refreshMetricModel(); }
         function onShowHumidityChanged() { root.refreshMetricModel(); }
         function onShowWindChanged() { root.refreshMetricModel(); }

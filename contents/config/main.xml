@@ -42,6 +42,10 @@
       <label>Font weight used in the widget.</label>
       <default>Light</default>
     </entry>
+    <entry name="temperatureUnit" type="String">
+      <label>Temperature unit.</label>
+      <default>celsius</default>
+    </entry>
     <entry name="windUnit" type="String">
       <label>Wind speed unit.</label>
       <default>kmh</default>

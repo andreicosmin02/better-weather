@@ -13,12 +13,21 @@ function formatNumber(value, decimals) {
     return (Math.round(numericValue * factor) / factor).toFixed(decimals);
 }
 
-function formatTemperature(value) {
-    if (!Number.isFinite(Number(value))) {
+function formatTemperature(value, temperatureUnit) {
+    var numericValue = Number(value);
+
+    if (!Number.isFinite(numericValue)) {
         return "--";
     }
 
-    return Math.round(Number(value)) + "\u00B0";
+    switch (temperatureUnit) {
+    case "fahrenheit":
+        return Math.round((numericValue * 9 / 5) + 32) + "\u00B0F";
+    case "kelvin":
+        return Math.round(numericValue + 273.15) + " K";
+    default:
+        return Math.round(numericValue) + "\u00B0";
+    }
 }
 
 function formatPercent(value) {
